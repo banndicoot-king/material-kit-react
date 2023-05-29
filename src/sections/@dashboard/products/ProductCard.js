@@ -1,14 +1,23 @@
 import PropTypes from 'prop-types';
-// @mui
-import { Box, Card, Link, Typography, Stack } from '@mui/material';
+import { useState } from 'react';
+import {
+  Box,
+  Card,
+  Link,
+  Typography,
+  Stack,
+  IconButton,
+  Modal,
+  Button,
+  DialogContent,
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
-// utils
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import CommentIcon from '@mui/icons-material/Comment';
 import { fCurrency } from '../../../utils/formatNumber';
-// components
 import Label from '../../../components/label';
 import { ColorPreview } from '../../../components/color-utils';
-
-// ----------------------------------------------------------------------
 
 const StyledProductImg = styled('img')({
   top: 0,
@@ -18,14 +27,29 @@ const StyledProductImg = styled('img')({
   position: 'absolute',
 });
 
-// ----------------------------------------------------------------------
 
-ShopProductCard.propTypes = {
-  product: PropTypes.object,
-};
 
 export default function ShopProductCard({ product }) {
-  const { name, cover, price, colors, status, priceSale } = product;
+  const { id, name, authorName, cover, price, status, published, priceSale, likeNumber, commentNumber } = product;
+  const [liked, setLiked] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+
+  const handleLike = () => {
+    setLiked(!liked);
+    console.log(`Book ID: ${id}, Liked: ${!liked}`);
+  };
+
+  const handleComment = () => {
+    window.open(`/comments/${id}`, '_blank');
+  };
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
 
   return (
     <Card>
@@ -46,6 +70,49 @@ export default function ShopProductCard({ product }) {
           </Label>
         )}
         <StyledProductImg alt={name} src={cover} />
+        {status === 'available' && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: 'background.default',
+              px: 1,
+            }}
+          >
+            <Typography variant="body2">Available</Typography>
+          </Box>
+        )}
+        {status === 'rented' && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: 'background.default',
+              px: 1,
+            }}
+          >
+            <Typography variant="body2">Rented</Typography>
+          </Box>
+        )}
+        {status === 'new' && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '12px',
+              left: '12px',
+              bgcolor: 'primary.main',
+              color: 'common.white',
+              p: '2px 8px',
+              borderRadius: '4px',
+            }}
+          >
+            <Typography variant="caption">New</Typography>
+          </Box>
+        )}
       </Box>
 
       <Stack spacing={2} sx={{ p: 3 }}>
@@ -54,9 +121,9 @@ export default function ShopProductCard({ product }) {
             {name}
           </Typography>
         </Link>
+        <Typography variant="caption">Author: {authorName}</Typography>
 
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <ColorPreview colors={colors} />
           <Typography variant="subtitle1">
             <Typography
               component="span"
@@ -72,6 +139,44 @@ export default function ShopProductCard({ product }) {
             {fCurrency(price)}
           </Typography>
         </Stack>
+
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <IconButton color={liked ? 'primary' : 'default'} onClick={handleLike}>
+            {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+          </IconButton>
+          <IconButton onClick={handleComment}>
+            <CommentIcon />
+          </IconButton>
+        </Stack>
+
+        <Button variant="contained" onClick={handleOpenModal}>
+          View Details
+        </Button>
+
+        <Modal open={openModal} onClose={handleCloseModal}>
+          <DialogContent>
+            <Box sx={{ p: 3 }}>
+              <Typography variant="h5" mb={2}>
+                {name}
+              </Typography>
+              <Typography variant="body1" mb={2}>
+                Author: {authorName}
+              </Typography>
+              <img src={cover} alt={name} style={{ width: '100%', height: 'auto' }} />
+              <Typography variant="body1" mt={2}>
+                Price: {fCurrency(price)}
+              </Typography>
+              {priceSale && (
+                <Typography variant="body1" color="error">
+                  Sale Price: {fCurrency(priceSale)}
+                </Typography>
+              )}
+              <Typography variant="body1">Likes: {likeNumber}</Typography>
+              <Typography variant="body1">Comments: {commentNumber}</Typography>
+              <Typography variant="body1">Published Date: {published}</Typography>
+            </Box>
+          </DialogContent>
+        </Modal>
       </Stack>
     </Card>
   );
